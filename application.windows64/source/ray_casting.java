@@ -23,7 +23,6 @@ float angle = 0;
 
 public void setup() {
   
-  
   generateWalls();
 }
 
@@ -37,12 +36,12 @@ public void draw() {
   }
   
   rays.clear();
-  for(int i = 0; i < 360; i += 2) {
+  for(float i = 0; i < 360; i += 0.25f) {
     rays.add(new Ray(i));
   }
   
-  strokeWeight(1);
-  stroke(256, 256, 0);
+  strokeWeight(3);
+  stroke(128, 128, 0, 128);
   for(Ray ray: rays) {
     ray.update();
     ray.render();
@@ -76,21 +75,20 @@ public void keyPressed() {
   }
 }
 class Ray {
-  float x1, y1, x2, y2;
+  PVector direction;
+  float target_x, target_y;
   
   Ray(float angle) {
-    PVector direction = PVector.fromAngle(radians(angle));
-    x2 = direction.x;
-    y2 = direction.y;
+    direction = PVector.fromAngle(radians(angle));
   }
   
   public void update() {
-    float min_distance = 999999999, distance;
+    float min_distance = 9999999, distance;
     int min_index = -1;
     
     for(int i = 0; i < walls.size(); i++) {
-      if(walls.get(i).intersects(mouseX, mouseY, mouseX + x2, mouseY + y2)) {
-        distance = calcDistance(mouseX, mouseY, walls.get(i).getX(), walls.get(i).getY());
+      if(walls.get(i).intersects(mouseX, mouseY, mouseX + direction.x, mouseY + direction.y)) {
+        distance = dist(mouseX, mouseY, walls.get(i).getX(), walls.get(i).getY());
         
         if(distance < min_distance) {
           min_distance = distance;
@@ -99,23 +97,18 @@ class Ray {
       }
     }
     if(min_index != -1) {
-      x1 = walls.get(min_index).getX();
-      y1 = walls.get(min_index).getY();
+      target_x = walls.get(min_index).getX();
+      target_y = walls.get(min_index).getY();
     }
   }
   
-  public float calcDistance(float x1, float y1, float x2, float y2) {
-    return pow(x2 - x1, 2) + pow(y2 - y1, 2);
-  }
-  
   public void render() {
-    line(mouseX, mouseY, x1, y1);
+    line(mouseX, mouseY, target_x, target_y);
   }
 }
 class Wall {
-  float x1, y1, x2, y2;
   float x3, y3, x4, y4;
-  float a, b, c, d, k1, k2, deno;
+  float a, b, c, d, k1, k2, xdiff, ydiff, deno;
   float s, t, x, y;
 
   Wall() {
@@ -131,24 +124,28 @@ class Wall {
     this.y4 = y4;
   }
   public boolean intersects(float x1, float y1, float x2, float y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
     
-    // println(x1, y1, x2, y2, x3, y3, x4, y4);
-    deno = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    a = x1 - x2;
+    d = y3 - y4;
+    b = x3 - x4;
+    c = y1 - y2;
+    k1 = x1 - x3;
+    k2 = y1 - y3;
+    xdiff = x2 - x1;
+    ydiff = y2 - y1;
+    
+    deno = a * d - b * c;
    
     if (deno == 0) {
       return false;
     }
 
-    s = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / deno;
-    t = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / deno;
+    s = (k1 * d - k2 * b) / deno;
+    t = (-a * k2 - ydiff * k1) / deno;
 
     if (s > 0 && 0 < t && t < 1) {
-      x = x1 + s * (x2 - x1);
-      y = y1 + s * (y2 - y1);
+      x = x1 + s * xdiff;
+      y = y1 + s * ydiff;
       return true;
     } else {
       return false;
@@ -167,7 +164,6 @@ class Wall {
     line(x3, y3, x4, y4);
   }
 }
-
   public void settings() {  fullScreen(); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "ray_casting" };

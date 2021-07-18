@@ -7,7 +7,6 @@ float angle = 0;
 
 void setup() {
   fullScreen();
-  
   generateWalls();
 }
 
@@ -21,12 +20,12 @@ void draw() {
   }
   
   rays.clear();
-  for(int i = 0; i < 360; i += 2) {
+  for(float i = 0; i < 360; i += 0.25) {
     rays.add(new Ray(i));
   }
   
-  strokeWeight(1);
-  stroke(256, 256, 0);
+  strokeWeight(3);
+  stroke(128, 128, 0, 128);
   for(Ray ray: rays) {
     ray.update();
     ray.render();
